@@ -61,7 +61,6 @@ func (u *UserManager) Exist(user musdk.User) bool {
 }
 
 func (u *UserManager) saveUserTraffic(user musdk.User) {
-	logger.Infof("check user %d traffic", user.Id)
 	ti := u.vm.GetTrafficAndReset(&user.V2rayUser)
 	if ti.Down == 0 && ti.Up == 0 {
 		return
@@ -71,6 +70,6 @@ func (u *UserManager) saveUserTraffic(user musdk.User) {
 		U:      ti.Up,
 		D:      ti.Down,
 	}
-	logger.Infof("save traffice log %v", trafficLog)
+	tl.Infof("id %d uuid %s save traffice log %v", user.Id, user.V2rayUser.UUID, trafficLog)
 	apiClient.SaveTrafficLog(trafficLog)
 }

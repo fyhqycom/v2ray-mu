@@ -1,0 +1,48 @@
+image: docker:latest
+services:
+  - docker:dind
+stages:
+  - build
+  - test
+  - notify
+  - deploy
+
+build:
+  stage: build
+  image: docker
+  script:
+    - export IMAGE_TAG=$(echo -en $CI_BUILD_REF_NAME | tr -c '[:alnum:]_.-' '-')
+    - docker login -u "$CI_BUILD_USER"  -p "$CI_BUILD_TOKEN" $CI_REGISTRY
+    - docker build --pull -t "$CI_REGISTRY_IMAGE:$IMAGE_TAG" .
+    - docker push "$CI_REGISTRY_IMAGE:$IMAGE_TAG"
+    - docker tag "$CI_REGISTRY_IMAGE:$IMAGE_TAG" "$CI_REGISTRY_IMAGE:latest"
+    - docker push "$CI_REGISTRY_IMAGE:latest"
+
+test:
+  stage: test
+  image: golang
+  allow_failure: true
+  script:
+    - go test -v ./...
+
+
+notify_fail:
+  image: orvice/telegram-notify:shell
+  stage: notify
+  script:
+    - /app/bin/notify.sh  ❌
+  when: on_failure
+
+notify_success:
+  image: orvice/telegram-notify:shell
+  stage: notify
+  script:
+    - /app/bin/notify.sh  ✅
+  when: on_success
+
+
+deploy_dev:
+  image: orvice/ubuntu-base
+  stage: deploy
+  script:
+    - echo "todo"
